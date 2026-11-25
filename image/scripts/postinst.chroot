@@ -1,0 +1,28 @@
+#!/bin/sh
+# Runs inside the image after package installation.
+set -eu
+
+# phosh.service runs as uid 1000. Development credentials only:
+# the password doubles as the lock-screen PIN.
+useradd --create-home --uid 1000 --shell /bin/bash --groups sudo jin
+echo 'jin:1234' | chpasswd
+# useradd stops copying /etc/skel at the first file it can't chown, which is
+# always the case in an unprivileged build. Copy it ourselves; tmpfiles.d
+# (jinos-home.conf) gives the files to jin at boot.
+cp -rT /etc/skel /home/jin
+
+# Call the system jinOS (boot menu, login screen, About pages) while keeping
+# ID=debian so tools that check for Debian still work. The divert keeps
+# Debian's file aside, and base-files upgrades write there instead.
+cp /usr/lib/os-release /usr/lib/os-release.debian
+dpkg-divert --quiet --local --no-rename --divert /usr/lib/os-release.debian --add /usr/lib/os-release
+sed -i -e 's/^PRETTY_NAME=.*/PRETTY_NAME="jinOS"/' -e 's/^NAME=.*/NAME="jinOS"/' /usr/lib/os-release
+
+# Apply jinOS GSettings defaults from mkosi.extra.
+glib-compile-schemas /usr/share/glib-2.0/schemas
+
+# Install jinOS's own apps (mounted from ../apps by BuildSources=).
+for installer in "$SRCDIR"/apps/*/install.sh; do
+    sh "$installer" /
+done
+gtk-update-icon-cache --quiet --force /usr/share/icons/hicolor 2>/dev/null || true

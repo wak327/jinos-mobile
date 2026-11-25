@@ -1,0 +1,10 @@
+# jinOS defaults. A phone always needs the on-screen keyboard.
+[org.gnome.desktop.a11y.applications]
+screen-keyboard-enabled=true
+
+# GNOME Files on a phone: a tap opens, and a grid that fits a phone screen.
+[org.gnome.nautilus.preferences]
+click-policy='single'
+
+[org.gnome.nautilus.icon-view]
+default-zoom-level='small-plus'

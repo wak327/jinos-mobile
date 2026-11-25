@@ -1,0 +1,11 @@
+[Unit]
+Description=Restart the voice call audio daemon after resume (jinOS, OnePlus 6)
+Documentation=https://wiki.debian.org/InstallingDebianOn/OnePlus/OnePlus6
+After=suspend.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/systemctl restart q6voiced.service
+
+[Install]
+WantedBy=suspend.target

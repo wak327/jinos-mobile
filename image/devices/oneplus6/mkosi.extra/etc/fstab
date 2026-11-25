@@ -1,0 +1,3 @@
+# The root filesystem lives in Android's userdata partition. It is flashed
+# smaller than the partition; x-systemd.growfs grows it on first boot.
+PARTLABEL=userdata  /  ext4  defaults,x-systemd.growfs  0  1

@@ -1,0 +1,3 @@
+# Let the modem wake the phone from suspend for calls and SMS. Without this a
+# suspended OnePlus 6 doesn't ring. (Mobian and postmarketOS sdm845 notes.)
+ACTION=="add", SUBSYSTEM=="rpmsg", KERNEL=="4080000.remoteproc:glink-edge.IPCRTR.-1.-1", ATTR{power/wakeup}="enabled"

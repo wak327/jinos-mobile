@@ -1,0 +1,9 @@
+#!/bin/sh
+# Plasma variant: install jinOS Home and make it the default home screen.
+set -eu
+
+sh "$SRCDIR"/shell/home/install.sh /
+
+defaults=/usr/share/plasma/shells/org.kde.plasma.mobileshell/contents/defaults
+grep -q '^Containment=org.kde.plasma.mobile.homescreen.folio$' "$defaults"
+sed -i 's/^Containment=org.kde.plasma.mobile.homescreen.folio$/Containment=org.jinos.home/' "$defaults"

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=About Phone
+Comment=What this phone is and which hardware jinOS can see
+Exec=jinos-about
+Icon=org.jinos.About
+Categories=GTK;Settings;HardwareSettings;
+Keywords=about;device;hardware;status;model;
+StartupNotify=true
+X-Purism-FormFactor=Workstation;Mobile;

@@ -1,0 +1,7 @@
+# Mobian: the sdm845 kernel and phone support packages (key fingerprint
+# D569 936C 7E32 F193 CBAA EC48 393F 924A 855F B27D).
+Types: deb
+URIs: https://repo.mobian.org
+Suites: forky
+Components: main
+Signed-By: /usr/share/keyrings/mobian.gpg

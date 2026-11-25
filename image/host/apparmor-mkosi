@@ -1,0 +1,17 @@
+# Ubuntu (24.04+) gives programs no capabilities inside unprivileged user
+# namespaces unless an AppArmor profile allows it. mkosi needs them to build
+# and boot images. Like Ubuntu's own podman profile, this confines nothing and
+# only grants user namespaces.
+#
+# Install:
+#   sudo install -m 644 host/apparmor-mkosi /etc/apparmor.d/mkosi
+#   sudo apparmor_parser -r /etc/apparmor.d/mkosi
+
+abi <abi/4.0>,
+include <tunables/global>
+
+profile mkosi /usr/bin/mkosi flags=(unconfined) {
+  userns,
+
+  include if exists <local/mkosi>
+}

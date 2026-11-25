@@ -1,0 +1,14 @@
+{
+    "KPackageStructure": "Plasma/Applet",
+    "KPlugin": {
+        "Authors": [{ "Name": "jinOS" }],
+        "Description": "Quiet Metro home screen for jinOS: a clock, live tiles and an app list",
+        "Icon": "go-home",
+        "Id": "org.jinos.start",
+        "License": "GPL-2.0-or-later",
+        "Name": "jinOS Start",
+        "Version": "0.1"
+    },
+    "X-Plasma-API-Minimum-Version": "6.0",
+    "X-Plasma-ContainmentType": "Desktop"
+}

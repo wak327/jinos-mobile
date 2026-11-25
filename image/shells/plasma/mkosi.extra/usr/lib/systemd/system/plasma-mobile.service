@@ -1,0 +1,38 @@
+# Starts Plasma Mobile on tty7 for the development user, the same way
+# Debian's phosh.service starts Phosh. No display manager needed.
+[Unit]
+Description=Plasma Mobile (jinOS development service)
+Conflicts=getty@tty1.service
+After=getty@tty1.service rc-local.service plymouth-quit-wait.service systemd-user-sessions.service
+OnFailure=getty@tty1.service
+Wants=dbus.socket
+After=dbus.socket
+Before=graphical.target
+ConditionPathExists=/dev/tty0
+
+[Service]
+Environment=LANG=C.UTF-8
+Environment=XDG_SESSION_TYPE=wayland
+# KDE reads /etc/xdg/menus/plasma-applications.menu only with this prefix;
+# without it the app menu (and so jinOS Start's app list) is empty.
+Environment=XDG_MENU_PREFIX=plasma-
+ExecStart=/usr/bin/startplasmamobile
+ExecStartPost=+chvt 7
+TimeoutStartSec=30
+User=1000
+PAMName=login
+WorkingDirectory=~
+Restart=always
+RestartSec=5s
+TTYPath=/dev/tty7
+TTYReset=yes
+TTYVHangup=yes
+TTYVTDisallocate=yes
+StandardInput=tty-fail
+StandardOutput=journal
+StandardError=journal
+UtmpIdentifier=tty7
+UtmpMode=user
+
+[Install]
+WantedBy=graphical.target

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kcfg xmlns="http://www.kde.org/standards/kcfg/1.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0 http://www.kde.org/standards/kcfg/1.0/kcfg.xsd">
+  <kcfgfile name=""/>
+  <group name="General">
+    <!-- Tiles in order, as "desktop-file-id|size" with size wide or small.
+         "jinos:battery" is the built-in battery tile. Apps that are not
+         installed are skipped. -->
+    <entry name="tiles" type="StringList">
+      <default>org.gnome.Calls.desktop|wide,sm.puri.Chatty.desktop|wide,jinos:battery|wide,org.jinos.Contacts.desktop|small,org.jinos.Camera.desktop|small,org.jinos.Gallery.desktop|small,org.kde.mobile.plasmasettings.desktop|small,org.jinos.About.desktop|small,org.gnome.Console.desktop|small</default>
+    </entry>
+    <!-- JSON map of tile id -> ISO time it was last opened from Start.
+         Notifications older than that no longer light the tile. -->
+    <entry name="seen" type="String">
+      <default>{}</default>
+    </entry>
+    <entry name="accentColor" type="String">
+      <default>#3584e4</default>
+    </entry>
+  </group>
+</kcfg>

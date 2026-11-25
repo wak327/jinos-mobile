@@ -1,0 +1,4 @@
+#!/usr/bin/python3
+from jinos_contacts.main import main
+
+raise SystemExit(main())

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kcfg xmlns="http://www.kde.org/standards/kcfg/1.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0 http://www.kde.org/standards/kcfg/1.0/kcfg.xsd">
+  <kcfgfile name=""/>
+  <group name="General">
+    <!-- Desktop file ids, in order. Apps that are not installed are skipped. -->
+    <entry name="dock" type="StringList">
+      <default>org.gnome.Calls.desktop,sm.puri.Chatty.desktop,firefox-esr.desktop,org.jinos.Contacts.desktop</default>
+    </entry>
+    <entry name="home" type="StringList">
+      <default>org.kde.plasma.camera.desktop,org.kde.koko.desktop,org.kde.kclock.desktop,org.kde.calindori.desktop,org.kde.kweather.desktop,org.kde.kalk.desktop,org.kde.mobile.plasmasettings.desktop,org.gnome.Nautilus.desktop,org.jinos.About.desktop,org.gnome.Console.desktop</default>
+    </entry>
+    <!-- JSON map of desktop file id -> ISO time the app was last opened from
+         jinOS Home. Notifications older than that no longer count in its badge. -->
+    <entry name="seen" type="String">
+      <default>{}</default>
+    </entry>
+  </group>
+</kcfg>

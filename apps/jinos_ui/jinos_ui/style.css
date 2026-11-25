@@ -1,0 +1,46 @@
+/* jinOS app look: standard libadwaita, a little larger, Inter type.
+   Layout comes from libadwaita's own widgets (header bars, cards, tabs). */
+
+window, .background {
+    font-family: "Inter", sans-serif;
+    font-size: 15px;
+}
+
+/* Rows a little taller and easier to hit with a thumb. */
+.boxed-list > row,
+list.boxed-list > row {
+    min-height: 56px;
+}
+
+/* Small grey label above a group of rows, like most phone settings apps. */
+.jinos-section {
+    font-size: 13px;
+    font-weight: 600;
+    color: alpha(currentColor, 0.6);
+}
+
+/* Big name under the avatar on a detail page. */
+.jinos-name {
+    font-size: 26px;
+    font-weight: 600;
+}
+
+/* Round quick-action buttons with a label underneath (Call, Message ...). */
+.jinos-action button {
+    min-width: 52px;
+    min-height: 52px;
+    padding: 0;
+    border-radius: 999px;
+    background: alpha(var(--accent-bg-color), 0.15);
+    color: var(--accent-color);
+}
+.jinos-action button:hover {
+    background: alpha(var(--accent-bg-color), 0.25);
+}
+.jinos-action label {
+    font-size: 13px;
+}
+
+.jinos-hint {
+    color: alpha(currentColor, 0.65);
+}

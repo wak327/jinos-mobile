@@ -1,0 +1,2 @@
+enable jinos-q6voiced-resume.service
+enable hexagonrpcd.service

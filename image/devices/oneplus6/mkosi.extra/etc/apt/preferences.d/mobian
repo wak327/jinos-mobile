@@ -1,0 +1,9 @@
+# Debian stays in charge: Mobian packages install only where Debian has no
+# version (kernel, *-support), except the phone audio profiles.
+Package: *
+Pin: origin repo.mobian.org
+Pin-Priority: 100
+
+Package: alsa-ucm-conf
+Pin: origin repo.mobian.org
+Pin-Priority: 600

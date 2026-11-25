@@ -1,0 +1,7 @@
+# Second boot menu entry on the jinOS USB stick: the stick's filesystem stays
+# read-only (changes go to RAM), so jinos-install can copy it to the laptop's
+# disk safely.
+[UKIProfile]
+Profile=ID=install
+        TITLE=Install to this computer
+Cmdline=systemd.volatile=overlay

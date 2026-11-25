@@ -1,0 +1,13 @@
+#!/bin/sh
+# Put the Adreno 630 GPU firmware in the initramfs: msm loads from it, and
+# initramfs-tools doesn't pick it up from the 6.18 kernel's compressed module
+# (it did with 6.12). The phone-specific a630_zap.mbn is added by
+# qcom-phone-utils' qcom-firmware hook once droid-juicer has extracted it.
+set -e
+case $1 in
+    prereqs) exit 0;;
+esac
+. /usr/share/initramfs-tools/hook-functions
+for fw in qcom/a630_sqe.fw qcom/a630_gmu.bin; do
+    add_firmware "$fw"
+done

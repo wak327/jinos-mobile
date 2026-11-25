@@ -1,0 +1,12 @@
+#!/bin/sh
+# Laptop (Plasma Desktop): pin apps jinOS ships to the taskbar. Plasma's
+# built-in defaults include Discover, which jinOS doesn't install (it shows as
+# a blank icon). The default panel is created by this layout script on a
+# user's first login; update scripts don't run for new users.
+set -eu
+
+layout=/usr/share/plasma/layout-templates/org.kde.plasma.desktop.defaultPanel/contents/layout.js
+grep -q '^panel.addWidget("org.kde.plasma.icontasks")$' "$layout"
+sed -i 's|^panel.addWidget("org.kde.plasma.icontasks")$|var tasks = panel.addWidget("org.kde.plasma.icontasks")\
+tasks.currentConfigGroup = ["General"]\
+tasks.writeConfig("launchers", ["applications:org.gnome.Nautilus.desktop", "applications:firefox-esr.desktop", "applications:org.gnome.Console.desktop", "applications:systemsettings.desktop"])|' "$layout"

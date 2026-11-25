@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Contacts
+Comment=The people you call and message
+Exec=jinos-contacts
+Icon=org.jinos.Contacts
+Categories=GTK;Office;ContactManagement;
+Keywords=people;address;book;phone;number;
+StartupNotify=true
+X-Purism-FormFactor=Workstation;Mobile;

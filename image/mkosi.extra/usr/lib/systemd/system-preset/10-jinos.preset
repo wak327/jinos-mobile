@@ -1,0 +1,4 @@
+enable phosh.service
+enable NetworkManager.service
+enable ModemManager.service
+enable systemd-resolved.service

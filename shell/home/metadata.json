@@ -1,0 +1,14 @@
+{
+    "KPackageStructure": "Plasma/Applet",
+    "KPlugin": {
+        "Authors": [{ "Name": "jinOS" }],
+        "Description": "jinOS home screen: clock, app icons, a dock and an app drawer",
+        "Icon": "go-home",
+        "Id": "org.jinos.home",
+        "License": "GPL-2.0-or-later",
+        "Name": "jinOS Home",
+        "Version": "0.1"
+    },
+    "X-Plasma-API-Minimum-Version": "6.0",
+    "X-Plasma-ContainmentType": "Desktop"
+}

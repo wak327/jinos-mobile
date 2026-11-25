@@ -1,0 +1,21 @@
+#!/bin/sh
+# Laptop: build the live ISO's boot image (a UKI). Its dracut initramfs has
+# dmsquash-live, which finds the ISO by its label (JINOS), mounts
+# LiveOS/squashfs.img, and runs the root filesystem image inside it read-only
+# with changes in RAM. postoutput assembles the ISO around it.
+set -eu
+
+kver=$(ls /usr/lib/modules | sort -V | tail -1)
+tmp=$(mktemp -d)
+dracut --quiet --force --no-hostonly --no-hostonly-cmdline \
+    --add "dmsquash-live" \
+    --add-drivers "iso9660 squashfs overlay loop sr_mod usb_storage uas nvme ahci" \
+    --kver "$kver" "$tmp/initrd-live.img"
+ukify build \
+    --linux "/usr/lib/modules/$kver/vmlinuz" \
+    --initrd "$tmp/initrd-live.img" \
+    --cmdline "root=live:CDLABEL=JINOS rd.live.image rd.live.overlay.overlayfs=1 quiet splash" \
+    --os-release @/usr/lib/os-release \
+    --output "$OUTPUTDIR/$IMAGE_ID.live.efi"
+rm -rf "$tmp"
+echo "Live boot image: $IMAGE_ID.live.efi (kernel $kver)"

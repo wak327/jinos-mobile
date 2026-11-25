@@ -1,0 +1,8 @@
+#!/bin/sh
+# The phone takes partitions one at a time over fastboot, so publish the root
+# partition (split out by SplitArtifacts=partitions) as the userdata image.
+set -eu
+cd "$OUTPUTDIR"
+root=$(ls "$IMAGE_ID".root-*.raw | head -1)
+mv "$root" "$IMAGE_ID.userdata.img"
+echo "Userdata image: $IMAGE_ID.userdata.img"

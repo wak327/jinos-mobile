@@ -1,0 +1,150 @@
+#!/bin/bash
+# jinos-install DISK: install the running jinOS onto DISK. ERASES DISK.
+#
+#   sudo jinos-install              list disks
+#   sudo jinos-install /dev/nvme0n1 install
+#
+# Works from the live ISO, and from the USB stick image when it was started
+# with "jinOS (Install to this computer)" (which keeps the stick read-only).
+# Either way the source root filesystem is read-only, so it can be copied
+# block for block.
+set -euo pipefail
+
+die() { echo "jinos-install: $*" >&2; exit 1; }
+ROOT_TYPE=4f68bce3-e8cd-4db1-96e7-fbcaf984b709   # root-x86-64 (Discoverable Partitions)
+ESP_TYPE=c12a7328-f81f-11d2-ba4b-00a0c93ec93b
+LOADER_VAR=/sys/firmware/efi/efivars/LoaderDevicePartUUID-4a67b082-0a4c-41cf-b6c7-440b29bb8c4f
+SECUREBOOT_VAR=/sys/firmware/efi/efivars/SecureBoot-8be4df61-93ca-11d2-aa0d-00e098032b8c
+LIVE=/run/initramfs/live
+LIVE_ROOTFS=/run/rootfsbase
+
+[ "$(id -u)" = 0 ] || die "run it with sudo"
+
+if [ $# -ne 1 ]; then
+    echo "Usage: sudo jinos-install DISK   (ERASES DISK)"
+    echo
+    lsblk -d -e 7,11 -o NAME,SIZE,MODEL,TRAN,TYPE
+    exit 2
+fi
+target=$(realpath "$1")
+[ -b "$target" ] && [ "$(lsblk -dno TYPE "$target")" = disk ] || die "$1 is not a whole disk (e.g. /dev/nvme0n1, not /dev/nvme0n1p1)"
+
+# Where are we running from, and what is the root filesystem to copy?
+if mountpoint -q "$LIVE"; then
+    # Live ISO (dracut dmsquash-live): LiveOS/rootfs.img is attached
+    # read-only to a loop device and mounted at /run/rootfsbase.
+    src_root=$(findmnt -no SOURCE "$LIVE_ROOTFS")
+    [ -b "$src_root" ] || die "can't find the live system's root filesystem ($LIVE_ROOTFS)"
+    medium=$(findmnt -no SOURCE "$LIVE")
+    src_disk=/dev/$(lsblk -no PKNAME "$medium" 2>/dev/null | head -1)
+    [ "$src_disk" != /dev/ ] || src_disk=$medium
+    what="the live system on $src_disk"
+else
+    [ "$(findmnt -no FSTYPE /)" = overlay ] ||
+        die "boot the stick with \"jinOS (Install to this computer)\" in the boot menu first (the stick must be read-only while it is copied)"
+    # The stick: the disk holding the ESP systemd-boot started from.
+    [ -r "$LOADER_VAR" ] || die "can't tell which disk this system booted from (not booted with systemd-boot?)"
+    esp_uuid=$(tail -c +5 "$LOADER_VAR" | iconv -f UTF-16LE -t ASCII | tr -d '\0' | tr '[:upper:]' '[:lower:]')
+    src_esp=$(realpath "/dev/disk/by-partuuid/$esp_uuid")
+    src_disk=/dev/$(lsblk -no PKNAME "$src_esp")
+    src_root=$(lsblk -lnpo NAME,PARTTYPE "$src_disk" | awk -v t="$ROOT_TYPE" '$2 == t { print $1; exit }')
+    [ -n "$src_root" ] || die "no jinOS root partition found on $src_disk"
+    what="the USB stick $src_disk"
+fi
+[ "$target" != "$src_disk" ] || die "$target is the medium jinOS is running from"
+
+echo "Installing jinOS from $what to:"
+echo
+lsblk -o NAME,SIZE,MODEL,FSTYPE,LABEL "$target"
+echo
+if [ -r "$SECUREBOOT_VAR" ] && [ "$(tail -c 1 "$SECUREBOOT_VAR" | od -An -tu1 | tr -d ' ')" = 1 ]; then
+    echo "WARNING: Secure Boot is on. jinOS isn't signed, so the laptop won't boot it"
+    echo "from the disk until you turn Secure Boot off in the firmware setup."
+    echo
+fi
+echo "Everything on $target will be ERASED, including any other operating system."
+name=$(basename "$target")
+read -r -p "Type \"$name\" to continue: " answer
+[ "$answer" = "$name" ] || die "cancelled; nothing was changed"
+
+while :; do
+    read -r -s -p "New password for user jin: " pass1; echo
+    read -r -s -p "Repeat it: " pass2; echo
+    [ -n "$pass1" ] && [ "$pass1" = "$pass2" ] && break
+    echo "Passwords don't match or are empty; try again."
+done
+
+work=$(mktemp -d /run/jinos-install.XXXXXX)
+cleanup() {
+    umount -R "$work/root" 2>/dev/null || true
+    rm -rf "$work"
+}
+trap cleanup EXIT
+
+# Partitions: a fresh 1 GB ESP (room for several kernels) and the root
+# filesystem, copied block for block into the rest of the disk.
+defs=$work/repart.d
+mkdir "$defs"
+cat > "$defs/10-esp.conf" <<EOF
+[Partition]
+Type=esp
+Format=vfat
+SizeMinBytes=1G
+SizeMaxBytes=1G
+EOF
+cat > "$defs/20-root.conf" <<EOF
+[Partition]
+Type=root
+CopyBlocks=$src_root
+EOF
+echo "Copying jinOS (a few minutes)..."
+systemd-repart --dry-run=no --empty=force --definitions="$defs" "$target" >/dev/null
+udevadm settle
+
+new_esp=$(lsblk -lnpo NAME,PARTTYPE "$target" | awk -v t="$ESP_TYPE" '$2 == t { print $1; exit }')
+new_root=$(lsblk -lnpo NAME,PARTTYPE "$target" | awk -v t="$ROOT_TYPE" '$2 == t { print $1; exit }')
+[ -n "$new_esp" ] && [ -n "$new_root" ] || die "partitioning didn't produce an ESP and a root partition"
+
+# Its own filesystem UUID (never clashing with the medium), grown to fill
+# the partition.
+e2fsck -fy "$new_root" >/dev/null || [ $? -le 1 ]
+tune2fs -U random "$new_root" >/dev/null
+resize2fs "$new_root" >/dev/null 2>&1
+root_partuuid=$(lsblk -no PARTUUID "$new_root")
+esp_partuuid=$(lsblk -no PARTUUID "$new_esp")
+
+root=$work/root
+mkdir "$root"
+mount "$new_root" "$root"
+mkdir -p "$root/efi"
+# Private permissions, as systemd mounts the ESP (it holds the random seed).
+mount -o umask=0077 "$new_esp" "$root/efi"
+
+# The ESP at /efi; /boot stays on the root filesystem for Debian's kernels.
+cat > "$root/etc/fstab" <<EOF
+# jinOS (written by jinos-install). Root is given on the kernel command line.
+PARTUUID=$esp_partuuid  /efi  vfat  umask=0077,shortname=winnt  0  2
+EOF
+echo "root=PARTUUID=$root_partuuid rw quiet splash" > "$root/etc/kernel/cmdline"
+# A new machine ID on first boot; the user's password.
+echo uninitialized > "$root/etc/machine-id"
+printf 'jin:%s\n' "$pass1" | chpasswd -R "$root"
+
+# Boot loader and the first boot entry, built the same way apt will build
+# them for future kernels (/etc/kernel/install.conf: dracut + ukify).
+for d in dev proc sys run; do
+    mount --rbind "/$d" "$root/$d"
+    mount --make-rslave "$root/$d"
+done
+echo "Setting up the boot loader..."
+chroot "$root" bootctl install --esp-path=/efi --graceful >/dev/null
+kver=$(ls "$root/usr/lib/modules" | sort -V | tail -1)
+echo "Building the boot image for kernel $kver (a minute)..."
+chroot "$root" kernel-install add "$kver" "/usr/lib/modules/$kver/vmlinuz"
+
+cat <<EOF
+
+jinOS is installed on $target.
+Remove the USB stick or ISO and restart. Log in as jin with the password
+you just set. Kernel updates from apt get their own boot entries.
+EOF

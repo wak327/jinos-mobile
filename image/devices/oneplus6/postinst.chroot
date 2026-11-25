@@ -1,0 +1,28 @@
+#!/bin/sh
+# OnePlus 6 (enchilada): build the Android boot image the phone's bootloader
+# loads from its boot partition. Like Mobian: the kernel with the device tree
+# appended, the initramfs, and a command line that tells the initramfs which
+# partition is root and tells qcom-phone-utils' kernel hook
+# (/etc/kernel/postinst.d/zz-qcom-bootimg) which device tree to use when it
+# rebuilds this image after a kernel upgrade.
+set -eu
+
+kver=$(linux-version list | tail -1)
+dtb=/usr/lib/linux-image-$kver/qcom/sdm845-oneplus-enchilada.dtb
+[ -f "$dtb" ]
+
+# The kernel package built the initramfs before every hook package was in;
+# rebuild it so the qcom firmware and mobile-root scripts are included.
+update-initramfs -u -k "$kver"
+
+cmdline="mobile.root=PARTLABEL=userdata mobile.qcomsoc=qcom/sdm845 mobile.vendor=oneplus mobile.model=enchilada mobile.rw"
+
+tmp=$(mktemp -d)
+cat "/boot/vmlinuz-$kver" "$dtb" > "$tmp/kernel-dtb"
+# Header v0 layout used by Mobian's sdm845 images.
+mkbootimg --kernel "$tmp/kernel-dtb" --ramdisk "/boot/initrd.img-$kver" \
+    --base 0x0 --kernel_offset 0x8000 --ramdisk_offset 0x1000000 \
+    --second_offset 0x0 --tags_offset 0x100 --pagesize 4096 \
+    --cmdline "$cmdline" -o "$OUTPUTDIR/$IMAGE_ID.boot-enchilada.img"
+rm -rf "$tmp"
+echo "Boot image: $IMAGE_ID.boot-enchilada.img (kernel $kver)"
